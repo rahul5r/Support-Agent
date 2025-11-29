@@ -1,1 +1,8 @@
-pip install langchain langchain-google-genai python-dotenv faiss-cpu sentence-transformers langchain-community langchain_huggingface streamlit
+langchain==1.1.0
+langchain-google-genai==3.2.0
+python-dotenv==1.2.1
+faiss-cpu==1.13.0
+sentence-transformers==5.1.2
+langchain-community==0.4.1
+langchain-huggingface==1.1.0
+streamlit==1.51.0
