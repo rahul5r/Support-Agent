@@ -1,0 +1,1 @@
+pip install langchain langchain-google-genai python-dotenv faiss-cpu sentence-transformers langchain-community langchain_huggingface streamlit
