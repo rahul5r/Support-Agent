@@ -24,7 +24,7 @@ It provides automated responses to FAQ questions and escalates critical or unres
 Implements a structured agent pipeline:
 
 ```
-agent_workflow.png
+![Agent Workflow](agent_workflow.png)
 
 ```
 
@@ -48,14 +48,15 @@ If a high‑risk scenario is detected (fraud, hacked account, stolen card, etc.)
 
 ```
 .
-├── app.py              # Main Streamlit application
-├── HDFC_Faq.txt        # FAQ dataset (JSON format)
-├── README.md           # Project documentation (this file)
-├── agent_workflow.png  # Agent
-├── README.md           # Project documentation (this file)
-├── README.md           # Project documentation (this file)
-├── README.md           # Project documentation (this file)
-└── .env               # Gemini API key
+├── app.py               # Main Streamlit / application script
+├── embeddings.py        # Script for generating / loading embeddings
+├── agent.ipynb          # Notebook for experimentation
+├── HDFC_Faq.txt         # FAQ dataset (text file, not JSON)
+├── faiss_index/         # Folder storing FAISS vector index
+├── agent_workflow.png   # Agent architecture diagram
+├── requirements.txt     # Python dependencies
+├── .env                 # Environment variables (API keys)
+└── README.md            # Project documentation
 ```
 
 ---
