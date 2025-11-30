@@ -65,8 +65,8 @@ If a high‑risk scenario is detected (fraud, hacked account, stolen card, etc.)
 ### 1. Clone the repository
 
 ```bash
-git clone <repo-url>
-cd faq-support-bot
+git clone https://github.com/rahul5r/Support-Agent
+cd Support-Agent
 ```
 
 ### 2. Install dependencies
@@ -74,17 +74,6 @@ cd faq-support-bot
 ```bash
 pip install -r requirements.txt
 ```
-
-Make sure these packages exist:
-
-- streamlit  
-- langchain  
-- langgraph  
-- faiss-cpu  
-- huggingface-hub  
-- sentence-transformers  
-- python-dotenv  
-- langchain-google-genai  
 
 ### 3. Add your Gemini API key
 
@@ -153,7 +142,3 @@ You can modify:
 - FAISS  
 
 ---
-
-## 📄 License
-
-MIT License (modify if needed)
