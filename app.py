@@ -33,27 +33,20 @@ st.title("FAQ Support Assistant")
 ESCALATION_EMAIL = "rahulvdhavasker@gmail.com"
 
 
-def open_gmail_compose(to: str, subject: str, body: str) -> bool:
-    """Open Gmail compose in browser with pre-filled details."""
-    try:
-        to_enc = urllib.parse.quote(to)
-        subject_enc = urllib.parse.quote(subject)
-        body_enc = urllib.parse.quote(body)
+def open_gmail_compose(to: str, subject: str, body: str) -> str:
+    """Return a Gmail compose URL that can be shown to the user."""
+    to_enc = urllib.parse.quote(to)
+    subject_enc = urllib.parse.quote(subject)
+    body_enc = urllib.parse.quote(body)
 
-        url = (
-            "https://mail.google.com/mail/?view=cm&fs=1"
-            f"&to={to_enc}"
-            f"&su={subject_enc}"
-            f"&body={body_enc}"
-        )
+    url = (
+        "https://mail.google.com/mail/?view=cm&fs=1"
+        f"&to={to_enc}"
+        f"&su={subject_enc}"
+        f"&body={body_enc}"
+    )
 
-        webbrowser.open(url)
-        return True
-
-    except Exception as e:
-        st.error(f"Failed to open Gmail: {str(e)}")
-        return False
-
+    return url
 
 # ======================
 # Load dataset + build vector store (cached)
@@ -464,8 +457,11 @@ def build_agent():
     # ends
     graph.add_edge("send_email", END)
     graph.add_edge("answer", END)
+    
+    agent = graph.compile()
 
-    return graph.compile()
+    return agent
+
 
 
 agent = build_agent()
@@ -495,8 +491,12 @@ for msg in st.session_state.messages:
 # ESCALATION FLOW (copied/adapted from your Streamlit app)
 # ======================
 # ======================
-# ESCALATION FLOW (enhanced - auto-returns to chat after success)
+# Initialize escalation session state
 # ======================
+if "escalation_gmail_ready" not in st.session_state:
+    st.session_state.escalation_gmail_ready = False
+if "user_email_final" not in st.session_state:
+    st.session_state.user_email_final = ""
 
 if st.session_state.pending_escalation:
     escalation = st.session_state.pending_escalation
@@ -510,22 +510,22 @@ if st.session_state.pending_escalation:
     user_email = st.text_input(
         "Your Email",
         placeholder="your.email@example.com",
-        key="escalation_email"
+        key="escalation_email_input"  # Unique key prevents conflicts
     )
 
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns([2, 1])
 
     with col1:
-        if st.button("Send Escalation Ticket", type="primary", use_container_width=True):
+        if st.button("📧 Send Escalation Ticket", type="primary", use_container_width=True, key="send_escalation"):
             if user_email and "@" in user_email:
+                # Generate ticket data
                 ticket_id = f"TKT-{datetime.now().strftime('%Y%m%d%H%M%S')}"
-
                 subject = f"HDFC Support Escalation - {ticket_id}"
-
+                
                 body = f"""HDFC SUPPORT ESCALATION TICKET
 
 Ticket ID: {ticket_id}
-Timestamp: {datetime.now().strftime('%Y%m%d%H%M%S IST')}
+Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S IST')}
 User Email: {user_email}
 
 ESCALATION REASON:
@@ -543,42 +543,65 @@ CASE SUMMARY:
 ---
 ACTION REQUIRED: Reply directly to user at {user_email}"""
 
-                if open_gmail_compose(ESCALATION_EMAIL, subject, body):
-                    # ✅ SUCCESS: Add confirmation to chat history and return to chat
-                    success_message = f"""
-✅ **Escalation ticket sent successfully!**
-
-**Ticket ID:** `{ticket_id}`  
-**Specialist Email:** {ESCALATION_EMAIL}  
-**Your Email:** {user_email}
-
-Please check your Gmail compose window, review the ticket, and click **Send**.  
-A specialist will contact you shortly at {user_email}.
-                    """
-                    
-                    # Add success message to chat history
-                    st.session_state.messages.append({
-                        "role": "assistant", 
-                        "content": success_message
-                    })
-                    
-                    # Clear escalation state to return to chat screen
-                    st.session_state.pending_escalation = None
-                    
-                    # Rerun to show chat screen with success message
-                    st.rerun()
+                st.session_state.gmail_link = open_gmail_compose(ESCALATION_EMAIL, subject, body)
+                st.session_state.user_email_final = user_email
+                st.session_state.escalation_gmail_ready = True  # KEY: Persist Gmail UI
+                st.success("✅ Gmail compose ready! Click the button below to open it.")
+                st.rerun()  # Show Gmail button
             else:
                 st.error("❌ Please enter a valid email address")
 
     with col2:
-        if st.button("Cancel", use_container_width=True):
-            # Add cancel message to chat
-            st.session_state.messages.append({
-                "role": "assistant", 
-                "content": "Escalation cancelled. How else can I help you?"
-            })
+        if st.button("❌ Cancel", use_container_width=True, key="cancel_escalation"):
             st.session_state.pending_escalation = None
+            st.session_state.escalation_gmail_ready = False
+            st.session_state.gmail_link = None
+            st.session_state.user_email_final = ""
             st.rerun()
+
+    # NEW: Gmail button section - shows ONLY after Send clicked, persists until user confirms
+    if st.session_state.escalation_gmail_ready:
+        st.markdown("---")
+        st.success(f"**Ticket ID:** `{ticket_id if 'ticket_id' in locals() else 'TKT-READY'}`")
+        st.info(f"**Your email:** {st.session_state.user_email_final} | **Specialist:** {ESCALATION_EMAIL}")
+        
+        col_gmail, col_done = st.columns([1, 1])
+        
+        with col_gmail:
+            st.markdown(
+                f"""
+                <a href="{st.session_state.gmail_link}" target="_blank" 
+                   style="text-decoration: none; display: block;">
+                    <button style="width: 100%; padding: 12px 24px; background: linear-gradient(45deg, #4285f4, #34a853); 
+                                   color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold;
+                                   box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer;">
+                        🚀 OPEN GMAIL COMPOSE & SEND
+                    </button>
+                </a>
+                """, 
+                unsafe_allow_html=True
+            )
+        
+        with col_done:
+            if st.button("✅ Opened Gmail - Back to Chat", type="secondary", use_container_width=True):
+                # Add success message to chat history
+                success_msg = f"""
+**✅ Escalation ticket completed!**
+
+**Ticket ID:** `{ticket_id if 'ticket_id' in locals() else st.session_state.get('ticket_id', 'TKT-SENT')}`  
+**Specialist notified:** {ESCALATION_EMAIL}  
+**Updates to:** {st.session_state.user_email_final}
+
+Specialist will contact you shortly.
+                """
+                st.session_state.messages.append({"role": "assistant", "content": success_msg})
+                
+                # Reset ALL escalation state
+                st.session_state.pending_escalation = None
+                st.session_state.escalation_gmail_ready = False
+                st.session_state.gmail_link = None
+                st.session_state.user_email_final = ""
+                st.rerun()
 
     st.stop()
 
