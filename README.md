@@ -4,6 +4,8 @@
 This project is an intelligent FAQ Support Assistant built using **Streamlit**, **LangGraph**, **FAISS**, **HuggingFace embeddings**, and **Google Gemini (Generative AI)**.  
 It provides automated responses to FAQ questions and escalates critical or unresolved cases to a human support team via Gmail.
 
+🔗 **Live App:**  
+👉 https://support-agent-rahul.streamlit.app/
 ---
 
 ## 🚀 Features
