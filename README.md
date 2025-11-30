@@ -23,10 +23,8 @@ It provides automated responses to FAQ questions and escalates critical or unres
 ### ✅ 3. LangGraph Workflow  
 Implements a structured agent pipeline:
 
-```
 ![Agent Workflow](agent_workflow.png)
 
-```
 
 ### ✅ 4. Critical Case Escalation  
 If a high‑risk scenario is detected (fraud, hacked account, stolen card, etc.):
